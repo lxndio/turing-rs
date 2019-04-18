@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ops::Deref;
 use crate::tape::{Direction, Tapeable, SimpleTape};
 
 pub type State = usize;
@@ -43,6 +44,10 @@ impl<V: Tapeable> TuringMachine<V> {
             println!("{:?} -> {:?}", k, v);
         }
         println!("Tape contents: {}", &self.tape);
+    }
+
+    pub fn tape(&self) -> &SimpleTape<V> {
+        self.tape.deref()
     }
 }
 

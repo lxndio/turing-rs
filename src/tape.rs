@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Display};
 use std::hash::Hash;
 
-pub trait Tapeable: Copy + Debug + Display + Eq + Hash {}
+pub trait Tapeable = Copy + Debug + Display + Eq + Hash;
 
 pub struct Tape<V: Tapeable> {
     /// Tape positions from 0 to infinity
@@ -34,6 +34,13 @@ pub trait SimpleTape<V>: Display {
     fn read(&self) -> Option<V>;
 
     fn write(&mut self, val: Option<V>);
+
+    /// Get the tape contents as a slice. May contain leading or trailing blanks
+    fn contents(&self) -> Vec<Option<V>>;
+
+    /// Like contents, but removes leading and trailing blanks. Blanks in the
+    /// middle are accepted
+    fn contents_trim_blanks(&self) -> Vec<Option<V>>;
 }
 
 impl<V: Tapeable> Tape<V> {
@@ -103,6 +110,23 @@ impl<V: Tapeable> SimpleTape<V> for Tape<V> {
 
         if self.head_position >= 0 { self.positive_tape[self.head_position as usize] = val; }
         else { self.negative_tape[self.head_position.abs() as usize - 1] = val; }
+    }
+
+    /// Get the tape contents as a slice. May contain leading or trailing blanks
+    fn contents(&self) -> Vec<Option<V>> {
+        self.negative_tape.clone().into_iter().rev().chain(self.positive_tape.clone().into_iter()).collect()
+    }
+
+    /// Like contents, but removes leading and trailing blanks. Blanks in the
+    /// middle are accepted
+    fn contents_trim_blanks(&self) -> Vec<Option<V>> {
+        let mut neg = self.negative_tape.clone();
+        while let Some(None) = neg.last() { neg.pop(); }
+
+        let mut pos = self.positive_tape.clone();
+        while let Some(None) = pos.last() { pos.pop(); }
+
+        neg.into_iter().rev().chain(pos.into_iter()).collect()
     }
 }
 
