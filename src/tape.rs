@@ -89,12 +89,20 @@ impl<V: Copy> X for Tape<V> {
     }
 
     fn read(&self) -> Option<V> {
-        if self.head_position >= 0 { self.positive_tape[self.head_position as usize] }
-        else { self.negative_tape[(self.head_position.abs()-1) as usize] }
+        if self.head_position >= 0 {
+            if let Some(v) = self.positive_tape.get(self.head_position as usize) { *v }
+            else { None }
+        }
+        else {
+            if let Some(v) = self.negative_tape.get(self.head_position.abs() as usize - 1) { *v }
+            else { None }
+        }
     }
 
     fn write(&mut self, val: Option<V>) {
-        if self.head_position >= 0 { self.positive_tape[self.head_position as usize] = val }
-        else { self.negative_tape[(self.head_position.abs()-1) as usize] = val }
+        self.fill_with_nones();
+
+        if self.head_position >= 0 { self.positive_tape[self.head_position as usize] = val; }
+        else { self.negative_tape[self.head_position.abs() as usize - 1] = val; }
     }
 }
