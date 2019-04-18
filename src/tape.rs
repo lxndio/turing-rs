@@ -1,10 +1,10 @@
-pub struct Tape<V = bool> {
+pub struct Tape<V: Copy = bool> {
     /// Tape positions from 0 to infinity
     positive_tape: Vec<Option<V>>,
     /// Tape positions from -1 to -infinity
     negative_tape: Vec<Option<V>>,
     /// The current head position
-    head_position: usize
+    head_position: isize
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
@@ -29,4 +29,28 @@ pub trait X {
 
     /// Don't move the Head and read the Value that is right under it.
     fn read(&self) -> Self::Value;
+}
+
+impl<V: Copy> X for Tape<V> {
+    type Value = Option<V>;
+
+    fn mv(&mut self, direction: Direction) -> Option<V> {
+        self.head_position += direction as isize;
+        self.read()
+    }
+
+    fn mv_left(&mut self) -> Option<V> {
+        self.head_position -= 1;
+        self.read()
+    }
+
+    fn mv_right(&mut self) -> Option<V> {
+        self.head_position += 1;
+        self.read()
+    }
+
+    fn read(&self) -> Option<V> {
+        if self.head_position >= 0 { self.positive_tape[self.head_position as usize] }
+        else { self.negative_tape[self.head_position.abs() as usize] }
+    }
 }
