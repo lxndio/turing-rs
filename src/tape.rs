@@ -1,12 +1,12 @@
 use std::hash::Hash;
 
-pub type Value<V: Copy + Eq + Hash = bool> = Option<V>;
+pub trait Tapeable: Copy + Eq + Hash {}
 
-pub struct Tape<V> {
+pub struct Tape<V: Tapeable> {
     /// Tape positions from 0 to infinity
-    positive_tape: Vec<Value<V>>,
+    positive_tape: Vec<Option<V>>,
     /// Tape positions from -1 to -infinity
-    negative_tape: Vec<Value<V>>,
+    negative_tape: Vec<Option<V>>,
     /// The current head position
     head_position: isize
 }
@@ -21,23 +21,23 @@ pub enum Direction {
 pub trait SimpleTape<V> {
     /// Move the Head in any direction, or hold it. Returns the Value on the
     /// Tape, which is at the new position.
-    fn mv(&mut self, direction: Direction) -> Value<V>;
+    fn mv(&mut self, direction: Direction) -> Option<V>;
 
     /// Move the Head left and return the Value that is found there.
-    fn mv_left(&mut self) -> Value<V>;
+    fn mv_left(&mut self) -> Option<V>;
 
     /// Move the Head right and return the Value that is found there.
-    fn mv_right(&mut self) -> Value<V>;
+    fn mv_right(&mut self) -> Option<V>;
 
     /// Don't move the Head and read the Value that is right under it.
-    fn read(&self) -> Value<V>;
+    fn read(&self) -> Option<V>;
 
-    fn write(&mut self, val: Value<V>);
+    fn write(&mut self, val: Option<V>);
 }
 
-impl<V> Tape<V> {
+impl<V: Tapeable> Tape<V> {
     /// Create a new, empty tape
-    pub fn new() -> Tape<Value> {
+    pub fn new() -> Tape<V> {
         Tape {
             positive_tape: Vec::new(),
             negative_tape: Vec::new(),
@@ -46,7 +46,7 @@ impl<V> Tape<V> {
     }
 
     /// Create a Tape from the values in the slice
-    pub fn tape(tape: Vec<Value<V>>) -> Tape<V> {
+    pub fn tape(tape: Vec<Option<V>>) -> Tape<V> {
         Tape {
             positive_tape: tape,
             negative_tape: Vec::new(),
@@ -72,18 +72,18 @@ impl<V> Tape<V> {
     }
 }
 
-impl<V: Copy> SimpleTape<V> for Tape<V> {
-    fn mv(&mut self, direction: Direction) -> Value<V> {
+impl<V: Tapeable> SimpleTape<V> for Tape<V> {
+    fn mv(&mut self, direction: Direction) -> Option<V> {
         self.head_position += direction as isize;
         self.read()
     }
 
-    fn mv_left(&mut self) -> Value<V> {
+    fn mv_left(&mut self) -> Option<V> {
         self.head_position -= 1;
         self.read()
     }
 
-    fn mv_right(&mut self) -> Value<V> {
+    fn mv_right(&mut self) -> Option<V> {
         self.head_position += 1;
         self.read()
     }

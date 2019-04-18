@@ -1,24 +1,24 @@
 use std::hash::Hash;
 use std::collections::HashMap;
-use crate::tape::{Direction, Tape, Value, SimpleTape};
+use crate::tape::{Direction, Tape, Tapeable, SimpleTape};
 
-pub struct TuringMachine<V> {
+pub type State = usize;
+pub type TransitionTable<V> = HashMap<(State, Option<V>), (State, Option<V>, Direction)>;
+
+pub struct TuringMachine<V: Tapeable> {
     current_state: State,
     tape: Box<SimpleTape<V>>,
     transitions: TransitionTable<V>,
 }
 
-pub type State = usize;
-pub type TransitionTable<V> = HashMap<(State, Value<V>), (State, Value<V>, Direction)>;
-
 pub trait Transitionable<V> {
-    fn peek_transition(&self) -> (State, Value<V>, Direction);
+    fn peek_transition(&self) -> (State, Option<V>, Direction);
 
     fn step(&mut self);
 }
 
-impl<V: Copy + Eq + Hash> Transitionable<V> for TuringMachine<V> {
-    fn peek_transition(&self) -> (State, Value<V>, Direction) {
+impl<V: Tapeable> Transitionable<V> for TuringMachine<V> {
+    fn peek_transition(&self) -> (State, Option<V>, Direction) {
         *self.transitions.get(&(self.current_state, self.tape.read())).expect("Could not read from transition table")
     }
 
