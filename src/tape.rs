@@ -51,6 +51,6 @@ impl<V: Copy> X for Tape<V> {
 
     fn read(&self) -> Option<V> {
         if self.head_position >= 0 { self.positive_tape[self.head_position as usize] }
-        else { self.negative_tape[self.head_position.abs() as usize] }
+        else { self.negative_tape[(self.head_position.abs()-1) as usize] }
     }
 }
