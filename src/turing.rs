@@ -1,6 +1,5 @@
-use std::hash::Hash;
 use std::collections::HashMap;
-use crate::tape::{Direction, Tape, Tapeable, SimpleTape};
+use crate::tape::{Direction, Tapeable, SimpleTape};
 
 pub type State = usize;
 pub type TransitionTable<V> = HashMap<(State, Option<V>), (State, Option<V>, Direction)>;
