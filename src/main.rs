@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 mod tape;
-mod turing;
+mod turing_machine;
 
 fn main() {
     println!("Hello, world!");
