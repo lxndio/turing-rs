@@ -34,6 +34,16 @@ impl<V: Tapeable> TuringMachine<V> {
     pub fn add_transition(&mut self, cause: (State, Option<V>), effect: (State, Option<V>, Direction)) -> Option<(State, Option<V>, Direction)> {
         self.transitions.insert(cause, effect)
     }
+
+    /// Print the state of the turing machine.
+    pub fn print(&self) {
+        println!("Turing Machine is in state: {}", self.current_state);
+        println!("Transition Table:");
+        for (k, v) in &self.transitions {
+            println!("{:?} -> {:?}", k, v);
+        }
+        println!("Tape contents: {}", &self.tape);
+    }
 }
 
 impl<V: Tapeable> Transitionable<V> for TuringMachine<V> {

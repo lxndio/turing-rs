@@ -1,6 +1,7 @@
+use std::fmt::{self, Debug, Display};
 use std::hash::Hash;
 
-pub trait Tapeable: Copy + Eq + Hash {}
+pub trait Tapeable: Copy + Debug + Display + Eq + Hash {}
 
 pub struct Tape<V: Tapeable> {
     /// Tape positions from 0 to infinity
@@ -18,7 +19,7 @@ pub enum Direction {
     Right = 1
 }
 
-pub trait SimpleTape<V> {
+pub trait SimpleTape<V>: Display {
     /// Move the Head in any direction, or hold it. Returns the Value on the
     /// Tape, which is at the new position.
     fn mv(&mut self, direction: Direction) -> Option<V>;
@@ -102,5 +103,28 @@ impl<V: Tapeable> SimpleTape<V> for Tape<V> {
 
         if self.head_position >= 0 { self.positive_tape[self.head_position as usize] = val; }
         else { self.negative_tape[self.head_position.abs() as usize - 1] = val; }
+    }
+}
+
+impl<V: Tapeable> Display for Tape<V> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(f, "[ ")?;
+
+        // Print the negative side (reversed, since the highest index contains
+        // the leftmost value)
+        for v in self.negative_tape.iter().rev() {
+            if let Some(v) = v { write!(f, "{} ", v)?; }
+            else { write!(f, "NONE")?; }
+        }
+
+        // Print the right side in the normal order
+        for v in self.positive_tape.iter() {
+            if let Some(v) = v { write!(f, "{} ", v)?; }
+            else { write!(f, "NONE")?; }
+        }
+
+        write!(f, "]")?;
+
+        Ok(())
     }
 }
