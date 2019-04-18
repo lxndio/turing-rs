@@ -29,6 +29,8 @@ pub trait X {
 
     /// Don't move the Head and read the Value that is right under it.
     fn read(&self) -> Self::Value;
+
+    fn write(&mut self, val: Self::Value);
 }
 
 impl<V: Copy> X for Tape<V> {
@@ -52,5 +54,10 @@ impl<V: Copy> X for Tape<V> {
     fn read(&self) -> Option<V> {
         if self.head_position >= 0 { self.positive_tape[self.head_position as usize] }
         else { self.negative_tape[(self.head_position.abs()-1) as usize] }
+    }
+
+    fn write(&mut self, val: Option<V>) {
+        if self.head_position >= 0 { self.positive_tape[self.head_position as usize] = val }
+        else { self.negative_tape[(self.head_position.abs()-1) as usize] = val }
     }
 }
