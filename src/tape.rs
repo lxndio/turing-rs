@@ -1,15 +1,15 @@
 use std::hash::Hash;
 
-pub struct Tape<Value> {
+pub type Value<V: Copy + Eq + Hash = bool> = Option<V>;
+
+pub struct Tape<V> {
     /// Tape positions from 0 to infinity
-    positive_tape: Vec<Value>,
+    positive_tape: Vec<Value<V>>,
     /// Tape positions from -1 to -infinity
-    negative_tape: Vec<Value>,
+    negative_tape: Vec<Value<V>>,
     /// The current head position
     head_position: isize
 }
-
-pub type Value<V: Copy + Eq + Hash = bool> = Option<V>;
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Direction {
@@ -18,24 +18,24 @@ pub enum Direction {
     Right = 1
 }
 
-pub trait X<Value> {
+pub trait X<V> {
     /// Move the Head in any direction, or hold it. Returns the Value on the
     /// Tape, which is at the new position.
-    fn mv(&mut self, direction: Direction) -> Value;
+    fn mv(&mut self, direction: Direction) -> Value<V>;
 
     /// Move the Head left and return the Value that is found there.
-    fn mv_left(&mut self) -> Value;
+    fn mv_left(&mut self) -> Value<V>;
 
     /// Move the Head right and return the Value that is found there.
-    fn mv_right(&mut self) -> Value;
+    fn mv_right(&mut self) -> Value<V>;
 
     /// Don't move the Head and read the Value that is right under it.
-    fn read(&self) -> Value;
+    fn read(&self) -> Value<V>;
 
-    fn write(&mut self, val: Value);
+    fn write(&mut self, val: Value<V>);
 }
 
-impl<Value> Tape<Value> {
+impl<V> Tape<V> {
     /// Create a new, empty tape
     pub fn new() -> Tape<Value> {
         Tape {
@@ -46,7 +46,7 @@ impl<Value> Tape<Value> {
     }
 
     /// Create a Tape from the values in the slice
-    pub fn tape(tape: Vec<Option<Value>>) -> Tape<Value> {
+    pub fn tape(tape: Vec<Value<V>>) -> Tape<V> {
         Tape {
             positive_tape: tape,
             negative_tape: Vec::new(),
@@ -72,28 +72,28 @@ impl<Value> Tape<Value> {
     }
 }
 
-impl X<Value> for Tape<Value> {
-    fn mv(&mut self, direction: Direction) -> Value {
+impl<V: Copy> X<V> for Tape<V> {
+    fn mv(&mut self, direction: Direction) -> Value<V> {
         self.head_position += direction as isize;
         self.read()
     }
 
-    fn mv_left(&mut self) -> Value {
+    fn mv_left(&mut self) -> Value<V> {
         self.head_position -= 1;
         self.read()
     }
 
-    fn mv_right(&mut self) -> Value {
+    fn mv_right(&mut self) -> Value<V> {
         self.head_position += 1;
         self.read()
     }
 
-    fn read(&self) -> Value {
+    fn read(&self) -> Value<V> {
         if self.head_position >= 0 { self.positive_tape[self.head_position as usize] }
         else { self.negative_tape[(self.head_position.abs()-1) as usize] }
     }
 
-    fn write(&mut self, val: Value) {
+    fn write(&mut self, val: Value<V>) {
         if self.head_position >= 0 { self.positive_tape[self.head_position as usize] = val }
         else { self.negative_tape[(self.head_position.abs()-1) as usize] = val }
     }
