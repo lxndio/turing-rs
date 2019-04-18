@@ -79,13 +79,11 @@ impl<V: Tapeable> SimpleTape<V> for Tape<V> {
     }
 
     fn mv_left(&mut self) -> Option<V> {
-        self.head_position -= 1;
-        self.read()
+        self.mv(Direction::Left)
     }
 
     fn mv_right(&mut self) -> Option<V> {
-        self.head_position += 1;
-        self.read()
+        self.mv(Direction::Right)
     }
 
     fn read(&self) -> Option<V> {
