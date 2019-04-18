@@ -31,6 +31,43 @@ pub trait X {
     fn read(&self) -> Self::Value;
 }
 
+impl<V: Copy> Tape<V> {
+    /// Create a new, empty tape
+    pub fn new() -> Tape<V> {
+        Tape {
+            positive_tape: Vec::new(),
+            negative_tape: Vec::new(),
+            head_position: 0
+        }
+    }
+
+    /// Create a Tape from the values in the slice
+    pub fn tape(tape: Vec<Option<V>>) -> Tape<V> {
+        Tape {
+            positive_tape: tape,
+            negative_tape: Vec::new(),
+            head_position: 0
+        }
+    }
+
+    // Fill with None until the current head position, so that the infinite tape
+    // rule will not be broken.
+    fn fill_with_nones(&mut self) {
+        if self.head_position >= 0 {
+            let adj_hp = self.head_position as usize;
+            if adj_hp  >= self.positive_tape.len() {
+                self.positive_tape.resize_with(adj_hp + 1, || { None });
+            }
+        }
+        else {
+            let adj_hp = self.head_position.abs() as usize - 1;
+            if adj_hp >= self.negative_tape.len() {
+                self.negative_tape.resize_with(adj_hp + 1, || { None });
+            }
+        }
+    }
+}
+
 impl<V: Copy> X for Tape<V> {
     type Value = Option<V>;
 
