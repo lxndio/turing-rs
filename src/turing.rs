@@ -1,10 +1,10 @@
 use std::hash::Hash;
 use std::collections::HashMap;
-use crate::tape::{Direction, Tape, Value, X};
+use crate::tape::{Direction, Tape, Value, SimpleTape};
 
 pub struct TuringMachine<V> {
     current_state: State,
-    tape: Box<X<V>>,
+    tape: Box<SimpleTape<V>>,
     transitions: TransitionTable<V>,
 }
 

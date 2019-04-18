@@ -18,7 +18,7 @@ pub enum Direction {
     Right = 1
 }
 
-pub trait X<V> {
+pub trait SimpleTape<V> {
     /// Move the Head in any direction, or hold it. Returns the Value on the
     /// Tape, which is at the new position.
     fn mv(&mut self, direction: Direction) -> Value<V>;
@@ -72,7 +72,7 @@ impl<V> Tape<V> {
     }
 }
 
-impl<V: Copy> X<V> for Tape<V> {
+impl<V: Copy> SimpleTape<V> for Tape<V> {
     fn mv(&mut self, direction: Direction) -> Value<V> {
         self.head_position += direction as isize;
         self.read()
