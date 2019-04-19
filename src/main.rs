@@ -3,12 +3,18 @@
 
 mod tape;
 mod turing_machine;
+mod gui;
 
 pub use tape::*;
 pub use turing_machine::*;
 
+use azul::{prelude::{App, AppConfig, WindowCreateOptions, css}};
+use crate::gui::TuringMachineApp;
+
 fn main() {
-    println!("Hello, world!");
+	let mut app = App::new(TuringMachineApp {}, AppConfig::default()).unwrap();
+	let window = app.create_window(WindowCreateOptions::default(), css::native()).unwrap();
+	app.run(window).unwrap();
 }
 
 #[cfg(test)]
