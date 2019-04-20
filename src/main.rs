@@ -8,13 +8,10 @@ mod gui;
 pub use tape::*;
 pub use turing_machine::*;
 
-use azul::{prelude::{App, AppConfig, WindowCreateOptions, css}};
-use crate::gui::TuringMachineApp;
+use crate::gui::gui;
 
 fn main() {
-	let mut app = App::new(TuringMachineApp {}, AppConfig::default()).unwrap();
-	let window = app.create_window(WindowCreateOptions::default(), css::native()).unwrap();
-	app.run(window).unwrap();
+	gui();
 }
 
 #[cfg(test)]
