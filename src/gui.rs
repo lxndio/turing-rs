@@ -1,4 +1,5 @@
-use azul::{prelude::*, widgets::{label::Label}};
+use azul::{prelude::*};
+use std::time::Duration;
 
 pub struct TuringMachineApp {
     
@@ -6,28 +7,16 @@ pub struct TuringMachineApp {
 
 impl Layout for TuringMachineApp {
     fn layout(&self, _info: LayoutInfo<Self>) -> Dom<Self> {
-        let label = Label::new(format!("Hello World")).dom()
-            .with_class("tape_elem");
-
-        Dom::new(NodeType::Div)
-            .with_class("main_window")
-            .with_child(label)
+        Dom::from_file("gui.xml", &mut XmlComponentMap::default())
     }
 }
 
 pub fn gui() {
     let mut app = App::new(TuringMachineApp {}, AppConfig::default()).unwrap();
-    let window = app.create_window(WindowCreateOptions::default(), css::override_native(WIN_CSS).unwrap()).unwrap();
+    let window = {
+        let hot_reloader = css::hot_reload_override_native("gui.css", Duration::from_millis(500));
+        app.create_hot_reload_window(WindowCreateOptions::default(), hot_reloader).unwrap()
+    };
+    // let window = app.create_window(WindowCreateOptions::default(), css::override_native("gui.css").unwrap()).unwrap();
     app.run(window).unwrap();
 }
-
-// TODO probably outsource to seperate file
-const WIN_CSS: &str = "\
-.main_window {
-    background-color: rgb(250, 250, 250);
-}
-
-.tape_elem {
-    border: 1px solid rgb(5, 5, 5);
-}
-";

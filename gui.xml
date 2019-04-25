@@ -1,0 +1,13 @@
+<component name="MainScreen">
+	<div id="main_screen">
+		<div id="top_bar">
+			<p class="button">Start</p>
+			<p class="button">Stop</p>
+			<p class="button">Step</p>
+		</div>
+	</div>
+</component>
+
+<app>
+	<MainScreen />
+</app>
