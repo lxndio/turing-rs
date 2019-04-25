@@ -1,9 +1,9 @@
 <component name="MainScreen">
 	<div id="main_screen">
 		<div id="top_bar">
-			<p class="button">Start</p>
-			<p class="button">Stop</p>
-			<p class="button">Step</p>
+			<p class="button" id="button_start">Start</p>
+			<p class="button" id="button_stop">Stop</p>
+			<p class="button" id="button_step">Step</p>
 		</div>
 	</div>
 </component>

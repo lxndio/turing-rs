@@ -10,9 +10,45 @@
 }
 
 .button {
-	position: relative;
-	float: left;
+	position: absolute;
 	height: 30px;
 	width: 80px;
 	border: 1px solid rgb(5, 5, 5);
+}
+
+.button:hover {
+	background-color: rgb(220, 220, 220);
+}
+
+.button:active {
+	background-color: rgb(200, 200, 200);
+}
+
+#button_start {
+	left: 5px;
+}
+
+#button_stop {
+	left: 90px;
+}
+
+#button_step {
+	left: 175px;
+}
+
+.tape_element {
+	position: absolute;
+	height: 30px;
+	width: 30px;
+	top: 200px;
+	left: [[ left_distance | 10px ]];
+	border: 1px solid rgb(5, 5, 5);
+}
+
+.tape_element:hover {
+	background-color: rgb(220, 220, 220);
+}
+
+.tape_element:active {
+	background-color: rgb(200, 200, 200);
 }
