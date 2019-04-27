@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![feature(trait_alias)]
 
+mod parser;
 mod tape;
 mod turing_machine;
 
