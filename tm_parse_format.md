@@ -14,6 +14,14 @@ A line to create a function transition should be written as follows:
 
 ```(q, a) -> (q', a', d)```
 
+The starting state is written as a transition with empty previous state and
+nothing yet read, like this:
+
+```() -> q0```
+
+Since there will be nothing written yet and a move is not allowed before the
+turing machine has started its work, a' and d are also left out.
+
 Note that due to technical limitations, contrary to the theoretical turing
 machine it is not possible to write any character onto the tape, but rather only
 ones from the alphabet chosen, which should be the input alphabet combined with
