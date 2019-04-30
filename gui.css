@@ -38,8 +38,8 @@
 
 .tape_element {
 	position: absolute;
-	height: 30px;
-	width: 30px;
+	height: 50px;
+	width: 50px;
 	top: 200px;
 	left: [[ left_distance | 10px ]];
 	border: 1px solid rgb(5, 5, 5);
@@ -51,4 +51,20 @@
 
 .tape_element:active {
 	background-color: rgb(200, 200, 200);
+}
+
+.true_cell {
+	background-color: rgb(100, 200, 100);
+}
+
+.true_cell:hover {
+	background-color: rgb(80, 180, 80);
+}
+
+.false_cell {
+	background-color: rgb(200, 100, 100);
+}
+
+.none_cell {
+	background-color: rgb(100, 100, 200);
 }
