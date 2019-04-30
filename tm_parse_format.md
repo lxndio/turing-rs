@@ -17,7 +17,7 @@ A line to create a function transition should be written as follows:
 The starting state is written as a transition with empty previous state and
 nothing yet read, like this:
 
-```() -> q0```
+```() -> (q0)```
 
 Since there will be nothing written yet and a move is not allowed before the
 turing machine has started its work, a' and d are also left out.
