@@ -120,13 +120,20 @@ impl<V: Tapeable> SimpleTape<V> for Tape<V> {
     /// Like contents, but removes leading and trailing blanks. Blanks in the
     /// middle are accepted
     fn contents_trim_blanks(&self) -> Vec<Option<V>> {
-        let mut neg = self.negative_tape.clone();
-        while let Some(None) = neg.last() { neg.pop(); }
+        let neg = self.negative_tape.clone();
+        let pos = self.positive_tape.clone();
 
-        let mut pos = self.positive_tape.clone();
-        while let Some(None) = pos.last() { pos.pop(); }
+        // Remove all Blanks from the start of the tape, but leave everything that may be trailing.
+        let mut started = false;
+        let mut res: Vec<Option<V>> = neg.into_iter().rev().chain(pos.into_iter())
+            .filter(|x| {
+                started |= x.is_some();
+                x.is_some() || started
+        }).collect();
 
-        neg.into_iter().rev().chain(pos.into_iter()).collect()
+        // Remove all blanks from the end of the tape, front has been dealt with already.
+        while let Some(None) = res.last() { res.pop(); }
+        res
     }
 }
 
@@ -150,5 +157,16 @@ impl<V: Tapeable> Display for Tape<V> {
         write!(f, "]")?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_trim_blanks() {
+        let tape = Tape::tape(vec![None, None, Some(true), None, None, Some(true), None, None]);
+        assert_eq!(tape.contents_trim_blanks(), vec![Some(true), None, None, Some(true)]);
     }
 }
