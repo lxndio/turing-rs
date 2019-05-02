@@ -10,13 +10,6 @@ pub struct TuringMachineApp {
 impl Layout for TuringMachineApp {
     fn layout(&self, _info: LayoutInfo<Self>) -> Dom<Self> {
         let mut dom = Dom::from_file("gui.xml", &mut XmlComponentMap::default());
-        /*let mut buttons = Vec::new();
-
-        for i in 0..20 {
-            buttons.push(Button::with_label(i.to_string()).dom()
-                .with_class("tape_element")
-                .with_css_override("left_distance", CssProperty::Left(LayoutLeft::px((10 + i*35) as f32))));
-        }*/
 
         let mut cells_dom = self.turing_machine.tape().contents_trim_blanks().iter().enumerate().map(|(i, cell)| NodeData {
             node_type: NodeType::Div,
@@ -36,7 +29,7 @@ impl Layout for TuringMachineApp {
 }
 
 pub fn gui() {
-    let vec: Vec<Option<bool>> = vec![Some(true); 20];
+    let vec: Vec<Option<bool>> = vec![Some(true); 35];
     let mut app = App::new(TuringMachineApp {
         turing_machine: TuringMachine::new(Box::new(Tape::tape(vec))),
     }, AppConfig::default()).unwrap();
