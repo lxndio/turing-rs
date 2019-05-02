@@ -150,8 +150,8 @@ impl<V: Tapeable> SimpleTape<V> for Tape<V> {
 
     fn contents_around_head(&self, radius: usize) -> Vec<Option<V>> {
         let mut res = Vec::with_capacity(radius*2 + 1);
-        for i in -(radius as isize) - 1..radius as isize {
-            res.push(self.read_position(i));
+        for i in -(radius as isize)..radius as isize + 1 {
+            res.push(self.read_position(i + self.head_position));
         }
 
         res
