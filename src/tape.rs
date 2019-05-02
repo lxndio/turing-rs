@@ -41,6 +41,11 @@ pub trait SimpleTape<V>: Display {
     /// Like contents, but removes leading and trailing blanks. Blanks in the
     /// middle are accepted
     fn contents_trim_blanks(&self) -> Vec<Option<V>>;
+
+    /// Get the contents next to and including the head. Returns radius items
+    /// left of the head, the cell below the head and radius items right of the
+    /// head.
+    fn contents_around_head(&self, radius: usize) -> Vec<Option<V>>;
 }
 
 impl<V: Tapeable> Tape<V> {
@@ -78,6 +83,20 @@ impl<V: Tapeable> Tape<V> {
             }
         }
     }
+
+    /// Dark, magic function, that does not exist and will never be used, because
+    /// it is impossible for the machine to even conceive such an operation.
+    /// Check what is on the band at a specific location without moving the head.
+    fn read_position(&self, pos: isize) -> Option<V> {
+        if pos >= 0 {
+            if let Some(v) = self.positive_tape.get(pos as usize) { *v }
+            else { None }
+        }
+        else {
+            if let Some(v) = self.negative_tape.get(pos.abs() as usize - 1) { *v }
+            else { None }
+        }
+    }
 }
 
 impl<V: Tapeable> SimpleTape<V> for Tape<V> {
@@ -95,14 +114,7 @@ impl<V: Tapeable> SimpleTape<V> for Tape<V> {
     }
 
     fn read(&self) -> Option<V> {
-        if self.head_position >= 0 {
-            if let Some(v) = self.positive_tape.get(self.head_position as usize) { *v }
-            else { None }
-        }
-        else {
-            if let Some(v) = self.negative_tape.get(self.head_position.abs() as usize - 1) { *v }
-            else { None }
-        }
+        self.read_position(self.head_position)
     }
 
     fn write(&mut self, val: Option<V>) {
@@ -120,13 +132,29 @@ impl<V: Tapeable> SimpleTape<V> for Tape<V> {
     /// Like contents, but removes leading and trailing blanks. Blanks in the
     /// middle are accepted
     fn contents_trim_blanks(&self) -> Vec<Option<V>> {
-        let mut neg = self.negative_tape.clone();
-        while let Some(None) = neg.last() { neg.pop(); }
+        let neg = self.negative_tape.clone();
+        let pos = self.positive_tape.clone();
 
-        let mut pos = self.positive_tape.clone();
-        while let Some(None) = pos.last() { pos.pop(); }
+        // Remove all Blanks from the start of the tape, but leave everything that may be trailing.
+        let mut started = false;
+        let mut res: Vec<Option<V>> = neg.into_iter().rev().chain(pos.into_iter())
+            .filter(|x| {
+                started |= x.is_some();
+                x.is_some() || started
+        }).collect();
 
-        neg.into_iter().rev().chain(pos.into_iter()).collect()
+        // Remove all blanks from the end of the tape, front has been dealt with already.
+        while let Some(None) = res.last() { res.pop(); }
+        res
+    }
+
+    fn contents_around_head(&self, radius: usize) -> Vec<Option<V>> {
+        let mut res = Vec::with_capacity(radius*2 + 1);
+        for i in -(radius as isize) - 1..radius as isize {
+            res.push(self.read_position(i));
+        }
+
+        res
     }
 }
 
@@ -150,5 +178,16 @@ impl<V: Tapeable> Display for Tape<V> {
         write!(f, "]")?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_trim_blanks() {
+        let tape = Tape::tape(vec![None, None, Some(true), None, None, Some(true), None, None]);
+        assert_eq!(tape.contents_trim_blanks(), vec![Some(true), None, None, Some(true)]);
     }
 }
