@@ -36,12 +36,20 @@
 	left: 175px;
 }
 
-#btn_element_qty_plus {
+#btn_speed {
 	left: 260px;
 }
 
-#btn_element_qty_minus {
+#btn_reset {
 	left: 345px;
+}
+
+#btn_element_qty_plus {
+	left: 430px;
+}
+
+#btn_element_qty_minus {
+	left: 515px;
 }
 
 .tape_element {
