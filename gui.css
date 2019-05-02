@@ -24,16 +24,24 @@
 	background-color: rgb(200, 200, 200);
 }
 
-#button_start {
+#btn_start {
 	left: 5px;
 }
 
-#button_stop {
+#btn_stop {
 	left: 90px;
 }
 
-#button_step {
+#btn_step {
 	left: 175px;
+}
+
+#btn_element_qty_plus {
+	left: 260px;
+}
+
+#btn_element_qty_minus {
+	left: 345px;
 }
 
 .tape_element {

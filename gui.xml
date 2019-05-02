@@ -1,9 +1,11 @@
 <component name="MainScreen">
 	<div id="main_screen">
 		<div id="top_bar">
-			<p class="button" id="button_start">Start</p>
-			<p class="button" id="button_stop">Stop</p>
-			<p class="button" id="button_step">Step</p>
+			<p class="button" id="btn_start">Start</p>
+			<p class="button" id="btn_stop">Stop</p>
+			<p class="button" id="btn_step">Step</p>
+			<p class="button" id="btn_element_qty_plus">Elements +</p>
+			<p class="button" id="btn_element_qty_minus">Elements -</p>
 		</div>
 	</div>
 </component>
