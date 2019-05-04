@@ -19,6 +19,19 @@ pub enum Direction {
     Right = 1
 }
 
+impl Direction {
+    /// Parse a direction from a string. Returns None, if it is not a known
+    /// direction.
+    pub fn from_str<S: AsRef<str>>(s: S) -> Option<Direction> {
+        match s.as_ref().to_lowercase().as_ref() {
+            "left" => Some(Direction::Left),
+            "hold" => Some(Direction::Hold),
+            "right" => Some(Direction::Right),
+            other => None
+        }
+    }
+}
+
 pub trait SimpleTape<V>: Display {
     /// Move the Head in any direction, or hold it. Returns the Value on the
     /// Tape, which is at the new position.

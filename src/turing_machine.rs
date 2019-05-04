@@ -60,6 +60,13 @@ impl<V: Tapeable> TuringMachine<V> {
         }
     }
 
+    /// Change the tape to be the one given as the argument. Keep in mind that
+    /// the head position can change, since it is not bound to the turing
+    /// machine, but to the tape itself.
+    pub fn insert_tape(&mut self, tape: Box<SimpleTape<V>>) {
+        self.tape = tape;
+    }
+
     /// Add a transition to the transition table. If there was already a transition
     /// registered to the cause, it will be replaced and returned
     pub fn add_transition(&mut self, cause: (State, Option<V>), effect: (State, Option<V>, Direction)) -> Option<(State, Option<V>, Direction)> {

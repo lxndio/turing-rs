@@ -1,7 +1,9 @@
-use crate::turing_machine::TuringMachine;
-use crate::tape::{Tape, Tapeable};
+use crate::turing_machine::{TuringMachine, State};
+use crate::tape::{Direction, Tape, Tapeable};
 
 use std::collections::HashMap;
+use std::str::FromStr;
+use std::fmt;
 
 /// Helper function to get the contents that have been written in a string
 /// starting with ( and ending with ). If something other than spaces is around
@@ -24,6 +26,7 @@ fn between_brackets(s: &str) -> Option<String> {
     else { Some(r) }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub enum ParseError {
     /// Lines need to be in the Implication Form, which means, that they are of
     /// the form premise -> effect
@@ -31,6 +34,9 @@ pub enum ParseError {
     /// If the cause and or effect are not properly put into the brackets, this
     /// error will be thrown
     WrongBracketStructure,
+    /// Too many arguments or too little in the cause or the effect clauses will
+    /// result in this kind of error
+    WrongNumberOfArguments,
     /// Encountered, when the String has an unaccepted type at a certain point,
     /// like a float, where an uint was expected
     InvalidType
@@ -38,7 +44,8 @@ pub enum ParseError {
 
 /// Parse a String to create a simple DTM with one tape, expects the alphabet
 /// to be used in the TM.
-pub fn parse_simple_turing_machine<S: AsRef<str>, G: Tapeable + 'static>(src: S) -> Result<TuringMachine<G>, ParseError> {
+pub fn parse_simple_turing_machine<S: AsRef<str>, G>(src: S) -> Result<TuringMachine<G>, ParseError>
+        where <G as FromStr>::Err: fmt::Debug, G: Tapeable + FromStr + 'static {
     // Set to the default starting state and create an empty transition table
     let mut starting_state = 0;
     let mut transitions = HashMap::new();
@@ -59,7 +66,54 @@ pub fn parse_simple_turing_machine<S: AsRef<str>, G: Tapeable + 'static>(src: S)
         }
 
         // Parse the transition and add it to the map
+        let cause: Vec<&str> = cause.split(',').map(|x| x.trim()).collect();
+        let effect: Vec<&str> = effect.split(',').map(|x| x.trim()).collect();
+
+        if cause.len() != 2 || effect.len() != 3 {
+            return Err(ParseError::WrongNumberOfArguments);
+        }
+
+        let cause_state: State = cause[0].parse().expect("Parsing Error in the starting state");
+        let cause_char: Option<G> = match cause[1] {
+            "None" => None,
+            c => Some(c.parse().expect("Parsing error in the cause char"))
+        };
+
+        let effect_state: State = effect[0].parse().expect("Parsing Error in the resulting state");
+        let effect_char: Option<G> = match effect[1] {
+            "None" => None,
+            c => Some(c.parse().expect("Parsing Error in the effect char"))
+        };
+        let movement = Direction::from_str(effect[2]).expect("Detected invalid direction");
+
+        transitions.insert((cause_state, cause_char), (effect_state, effect_char, movement));
     }
 
     Ok(TuringMachine::init_fully(Box::new(Tape::new()), transitions, starting_state))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::turing_machine::Transitionable;
+
+    #[test]
+    fn test_simple_tm_parse() {
+        let source = "() -> (1)
+        (1, true) -> (1, false, Right)
+        (1, false) -> (1, true, Right)
+        (1, None) -> (1, None, Hold)".to_string();
+        let tape = Tape::tape(vec![Some(true), Some(false), Some(true), Some(false), Some(true), Some(false)]);
+        let mut tm = parse_simple_turing_machine(&source).expect("Could not parse turing machine");
+        tm.insert_tape(Box::new(tape));
+
+        while tm.step() {
+            println!("Stepping TM");
+        }
+
+        println!("TM finished:");
+        tm.print();
+
+        assert_eq!(tm.tape().contents_trim_blanks(), vec![Some(false), Some(true), Some(false), Some(true), Some(false), Some(true)]);
+    }
 }
