@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Lex {
     /// Tuple containing some values that need to be interpreted
     /// according to the position in the string.
@@ -8,7 +8,7 @@ pub enum Lex {
     Implication
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum LexError {
     UnexpectedToken(char)
 }

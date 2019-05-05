@@ -1,5 +1,6 @@
 use crate::turing_machine::{TuringMachine, State};
 use crate::tape::{Direction, Tape, Tapeable};
+use crate::lexicaliser::*;
 
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -31,15 +32,22 @@ pub enum ParseError {
     /// Lines need to be in the Implication Form, which means, that they are of
     /// the form premise -> effect
     NotImplicationForm,
-    /// If the cause and or effect are not properly put into the brackets, this
-    /// error will be thrown
-    WrongBracketStructure,
     /// Too many arguments or too little in the cause or the effect clauses will
     /// result in this kind of error
     WrongNumberOfArguments,
     /// Encountered, when the String has an unaccepted type at a certain point,
     /// like a float, where an uint was expected
-    InvalidType
+    InvalidType,
+    /// If an implication is pointing towards nothing, this error is thrown
+    ImplyingNothing,
+    /// If the starting state is not left as the default, but is set to None,
+    /// this will be returned, since the machine must have a valid starting state
+    MustHaveStartingState,
+    /// When a direction required, but not found.
+    MissingDirection,
+    /// When the lexicaliser stumbles upon an unexpected token, the semantics are
+    /// not checked, but rather, this syntax error is thrown
+    SyntaxError(LexError)
 }
 
 /// Parse a String to create a simple DTM with one tape, expects the alphabet
@@ -50,43 +58,86 @@ pub fn parse_simple_turing_machine<S: AsRef<str>, G>(src: S) -> Result<TuringMac
     let mut starting_state = 0;
     let mut transitions = HashMap::new();
 
-    for l in src.as_ref().lines() {
-        // Cut up the implication
-        let clause: Vec<&str> = l.split("->").collect();
-        if clause.len() != 2 { return Err(ParseError::NotImplicationForm); }
+    let lexed = match lexicalise(&src) {
+        Ok(lex) => lex,
+        Err(err) => return Err(ParseError::SyntaxError(err))
+    };
 
-        let (cause, effect) = (clause[0].trim(), clause[1].trim());
-        let (cause, effect) = (between_brackets(&cause).expect("Error parsing brackets"), between_brackets(&effect).expect("Error parsing brackets"));
-
-        // Check if the cause is empty, which would mark the starting state
-        let spaceless: String = cause.chars().filter(|x| *x != ' ').collect();
-        if spaceless == "" {
-            starting_state = effect.parse().expect("Error parsing starting state");
-            continue;
+    let mut i = lexed.iter();
+    while let Some(cause) = i.next() {
+        // Check that the next element is an implication sign
+        if i.next() != Some(&Lex::Implication) {
+            return Err(ParseError::NotImplicationForm);
         }
+        // Check if the string suddenly ends
+        let effect = match i.next() {
+            Some(effect) => effect,
+            None => return Err(ParseError::ImplyingNothing)
+        };
 
-        // Parse the transition and add it to the map
-        let cause: Vec<&str> = cause.split(',').map(|x| x.trim()).collect();
-        let effect: Vec<&str> = effect.split(',').map(|x| x.trim()).collect();
+        // Check if the cause and effect are actually tuples, and not some
+        // nonsense
+        let cause = match cause {
+            Lex::Tuple(cause) => cause,
+            _ => return Err(ParseError::NotImplicationForm)
+        };
+        let effect = match effect {
+            Lex::Tuple(effect) => effect,
+            _ => return Err(ParseError::NotImplicationForm)
+        };
 
-        if cause.len() != 2 || effect.len() != 3 {
+        // Check if it is the starting state in form () -> (q0)
+        if cause.len() == 0 && effect.len() == 1 {
+            if effect[0].is_none() {
+                return Err(ParseError::MustHaveStartingState);
+            }
+            starting_state = match effect[0].clone().unwrap().parse() {
+                Ok(ss) => ss,
+                Err(_) => return Err(ParseError::InvalidType)
+            };
+        }
+        else if cause.len() == 2 && effect.len() == 3 {
+            let parse_state = |p: Option<String>| {
+                let p = match p {
+                    Some(p) => p,
+                    None => return Err(ParseError::InvalidType)
+                };
+
+                match p.parse() {
+                    Ok(p) => Ok(p),
+                    Err(_) => Err(ParseError::InvalidType)
+                }
+            };
+
+            let q: State = parse_state(cause[0].clone())?;
+            let a = if let Some(a) = cause[1].clone() {
+                match a.parse() {
+                    Ok(a) => Some(a),
+                    Err(_) => return Err(ParseError::InvalidType)
+                }
+            } else { None };
+
+            let q_next = parse_state(effect[0].clone())?;
+            let a_next = if let Some(a) = effect[1].clone() {
+                match a.parse() {
+                    Ok(a) => Some(a),
+                    Err(_) => return Err(ParseError::InvalidType)
+                }
+            } else { None };
+            let direction = match effect[2].clone() {
+                Some(d) => d,
+                None => return Err(ParseError::MissingDirection)
+            };
+            let direction = match Direction::from_str(direction) {
+                Some(d) => d,
+                None => return Err(ParseError::InvalidType)
+            };
+
+            transitions.insert((q, a), (q_next, a_next, direction));
+        }
+        else {
             return Err(ParseError::WrongNumberOfArguments);
         }
-
-        let cause_state: State = cause[0].parse().expect("Parsing Error in the starting state");
-        let cause_char: Option<G> = match cause[1] {
-            "None" => None,
-            c => Some(c.parse().expect("Parsing error in the cause char"))
-        };
-
-        let effect_state: State = effect[0].parse().expect("Parsing Error in the resulting state");
-        let effect_char: Option<G> = match effect[1] {
-            "None" => None,
-            c => Some(c.parse().expect("Parsing Error in the effect char"))
-        };
-        let movement = Direction::from_str(effect[2]).expect("Detected invalid direction");
-
-        transitions.insert((cause_state, cause_char), (effect_state, effect_char, movement));
     }
 
     Ok(TuringMachine::init_fully(Box::new(Tape::new()), transitions, starting_state))
@@ -99,10 +150,12 @@ mod tests {
 
     #[test]
     fn test_simple_tm_parse() {
-        let source = "() -> (1)
+        let source = "
+        () -> (1)
         (1, true) -> (1, false, Right)
         (1, false) -> (1, true, Right)
-        (1, None) -> (1, None, Hold)".to_string();
+        (1, None) -> (1, None, Hold)
+        ".to_string();
         let tape = Tape::tape(vec![Some(true), Some(false), Some(true), Some(false), Some(true), Some(false)]);
         let mut tm = parse_simple_turing_machine(&source).expect("Could not parse turing machine");
         tm.insert_tape(Box::new(tape));
