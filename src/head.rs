@@ -80,3 +80,65 @@ pub trait TuringHead {
     /// The current head position
     fn pos(&self) -> isize;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn direction_from_str() {
+        assert_eq!(Direction::from_str("Left"), Some(Direction::Left));
+        assert_eq!(Direction::from_str("Hello, world"), None);
+    }
+
+    #[test]
+    fn head_default_pos() {
+        assert_eq!(Head::new().pos(), 0);
+    }
+
+    #[test]
+    fn head_mv() {
+        let mut head = Head::new();
+
+        // Move to the right, left and then hold. The Head should be in exactly
+        // the position from the start at the end
+        head.mv(Direction::Left);
+        head.mv(Direction::Right);
+        head.mv(Direction::Hold);
+
+        assert_eq!(head.pos(), 0);
+    }
+
+    #[test]
+    fn head_mv_right() {
+        let mut head = Head::new();
+        head.mv_right();
+        assert_eq!(head.pos(), 1);
+    }
+
+    #[test]
+    fn head_mv_left() {
+        let mut head = Head::new();
+        head.mv_left();
+        assert_eq!(head.pos(), -1);
+    }
+
+    #[test]
+    fn head_read() {
+        let mut head = Head::new();
+        head.mv_right();
+        let tape = Tape::tape(vec![Some(true), Some(false), None]);
+
+        assert_eq!(head.read(&tape), Some(false));
+    }
+
+    #[test]
+    fn head_write() {
+        let mut head = Head::new();
+        head.mv_left();
+        let mut tape = Tape::tape(vec![Some(false), None, Some(true)]);
+
+        head.write(&mut tape, Some(false));
+        assert_eq!(head.read(&tape), Some(false));
+    }
+}
