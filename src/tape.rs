@@ -115,8 +115,52 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_trim_blanks() {
+    fn tape_contents_trim_blanks() {
         let tape = Tape::tape(vec![None, None, Some(true), None, None, Some(true), None, None]);
         assert_eq!(tape.contents_trim_blanks(), vec![Some(true), None, None, Some(true)]);
+    }
+
+    #[test]
+    fn tape_default_empty() {
+        let tape: Tape<u8> = Tape::new();
+        assert_eq!(tape.contents(), vec![]);
+    }
+
+    #[test]
+    fn tape_contents() {
+        let tape = Tape::tape(vec![Some(1010), None, None, Some(68), None]);
+        assert_eq!(tape.contents(), vec![Some(1010), None, None, Some(68), None]);
+    }
+
+    #[test]
+    fn tape_read_positive() {
+        let tape = Tape::tape(vec![Some(-191), None, Some(1)]);
+        assert_eq!(tape.read(2), Some(1));
+    }
+
+    #[test]
+    fn tape_read_oob_neg() {
+        let tape = Tape::tape(vec![Some("Hello"), Some(","), Some("there")]);
+        assert_eq!(tape.read(-15701), None);
+    }
+
+    #[test]
+    fn tape_read_oob_pos() {
+        let tape = Tape::tape(vec![Some("Is"), None, Some("this"), None, Some("the"), None, Some("end?")]);
+        assert_eq!(tape.read(4000), None);
+    }
+
+    #[test]
+    fn tape_write_oob_neg() {
+        let mut tape = Tape::new();
+        tape.write(-42, Some(42));
+        assert_eq!(tape.read(-42), Some(42));
+    }
+
+    #[test]
+    fn tape_write_oob_pos() {
+        let mut tape = Tape::new();
+        tape.write(1337, Some("body once told me"));
+        assert_eq!(tape.read(1337), Some("body once told me"));
     }
 }
