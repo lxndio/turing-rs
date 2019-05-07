@@ -1,6 +1,7 @@
 use crate::turing_machine::{TuringMachine, State};
-use crate::tape::{Direction, Tape, Tapeable};
+use crate::tape::{Tape, Tapeable};
 use crate::lexicaliser::*;
+use crate::head::{Direction, Head};
 
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -140,7 +141,7 @@ pub fn parse_simple_turing_machine<S: AsRef<str>, G>(src: S) -> Result<TuringMac
         }
     }
 
-    Ok(TuringMachine::init_fully(Box::new(Tape::new()), transitions, starting_state))
+    Ok(TuringMachine::init_fully(Tape::new(), transitions, starting_state))
 }
 
 #[cfg(test)]

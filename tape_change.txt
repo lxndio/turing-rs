@@ -1,0 +1,9 @@
+Im Moment wird das Band noch nicht wirklich gut benutzt. Es gibt kaum
+Funktionen, die unabhängig auf verschiedene Arten von Bändern und
+Turing-Maschinen eingesetzt werden können. Dies sollten wir ändern, damit es
+einfacher benutzbar wird.
+Um dieses Ziel zu erreichen, sollten wir die folgenden Schritte unternehmen:
+
+Das Band wird von dem Lesekopf getrennt. Dies ermöglicht es, mehrere Köpfe auf
+einem Band zu haben, ohne dafür einen eigenen Typ anzulegen. Des weiteren können
+andere mögliche Anpassungen später noch besser getroffen werden.

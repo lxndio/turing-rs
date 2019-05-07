@@ -1,11 +1,13 @@
 #![allow(dead_code)]
 #![feature(trait_alias)]
 
+mod head;
 mod lexicaliser;
 mod parser;
 mod tape;
 mod turing_machine;
 
+pub use head::*;
 pub use lexicaliser::*;
 pub use tape::*;
 pub use turing_machine::*;

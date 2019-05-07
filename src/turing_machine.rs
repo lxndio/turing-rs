@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::ops::Deref;
-use crate::tape::{Direction, Tapeable, SimpleTape};
+use crate::tape::{Tape, Tapeable};
+use crate::head::{Direction, Head, TuringHead};
 
 pub type State = usize;
 pub type TransitionTable<V> = HashMap<(State, Option<V>), (State, Option<V>, Direction)>;
@@ -8,7 +9,8 @@ pub type TransitionTable<V> = HashMap<(State, Option<V>), (State, Option<V>, Dir
 pub struct TuringMachine<V: Tapeable> {
     starting_state: State,
     current_state: State,
-    tape: Box<SimpleTape<V>>,
+    tape: Tape<V>,
+    head: Head,
     transitions: TransitionTable<V>,
 }
 
@@ -29,33 +31,36 @@ pub trait Transitionable<V> {
 
 impl<V: Tapeable> TuringMachine<V> {
     /// Create a new turing machine with a tape inserted and empty transition function
-    pub fn new(tape: Box<SimpleTape<V>>) -> TuringMachine<V> {
+    pub fn new(tape: Tape<V>) -> TuringMachine<V> {
         TuringMachine {
             starting_state: 0,
             current_state: 0,
             tape,
+            head: Head::new(),
             transitions: HashMap::new()
         }
     }
 
     /// Create a new turing machine with a tape, empty transition table and a
     /// starting state that may differ from the default, which is 0
-    pub fn with_starting_state(tape: Box<SimpleTape<V>>, starting_state: State) -> TuringMachine<V> {
+    pub fn with_starting_state(tape: Tape<V>, starting_state: State) -> TuringMachine<V> {
         TuringMachine {
             starting_state,
             current_state: starting_state,
             tape,
+            head: Head::new(),
             transitions: HashMap::new()
         }
     }
 
     /// Initialise the turing machine fully. Needs the tape containing the input,
     /// the full transition table and the state the machine will start from.
-    pub fn init_fully(tape: Box<SimpleTape<V>>, transitions: TransitionTable<V>, starting_state: State) -> TuringMachine<V> {
+    pub fn init_fully(tape: Tape<V>, transitions: TransitionTable<V>, starting_state: State) -> TuringMachine<V> {
         TuringMachine {
             starting_state,
             current_state: starting_state,
             tape,
+            head: Head::new(),
             transitions
         }
     }
@@ -63,7 +68,7 @@ impl<V: Tapeable> TuringMachine<V> {
     /// Change the tape to be the one given as the argument. Keep in mind that
     /// the head position can change, since it is not bound to the turing
     /// machine, but to the tape itself.
-    pub fn insert_tape(&mut self, tape: Box<SimpleTape<V>>) {
+    pub fn insert_tape(&mut self, tape: Tape<V>) {
         self.tape = tape;
     }
 
@@ -83,8 +88,8 @@ impl<V: Tapeable> TuringMachine<V> {
         println!("Tape contents: {}", &self.tape);
     }
 
-    pub fn tape(&self) -> &SimpleTape<V> {
-        self.tape.deref()
+    pub fn tape(&self) -> &Tape<V> {
+        &self.tape
     }
 }
 
@@ -94,7 +99,7 @@ impl<V: Tapeable> Transitionable<V> for TuringMachine<V> {
     }
 
     fn peek_transition(&self) -> (State, Option<V>, Direction) {
-        *self.transitions.get(&(self.current_state, self.tape.read())).expect("Could not read from transition table")
+        *self.transitions.get(&(self.current_state, self.head.read(&self.tape))).expect("Could not read from transition table")
     }
 
     /// Make the next step of the turing machine. Returns true, if it is still
@@ -104,15 +109,15 @@ impl<V: Tapeable> Transitionable<V> for TuringMachine<V> {
         let (new_state, value, dir) = self.peek_transition();
 
         // Check if a holding state has been reached
-        if self.current_state == new_state && self.tape.read() == value {
+        if self.current_state == new_state && self.head.read(&self.tape) == value {
             println!("Reached holding state");
             return false;
         }
 
         // Change state and replace the tapes contents with the correct value
         self.current_state = new_state;
-        self.tape.write(value);
-        self.tape.mv(dir);
+        self.head.write(&mut self.tape, value);
+        self.head.mv(dir);
 
         true
     }
