@@ -8,15 +8,20 @@ pub enum Lex {
     Implication
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum LexError {
-    UnexpectedToken(char)
+    UnexpectedToken(char),
+    /// Thrown, when the lexicaliser reaches the end of the input, but something
+    /// has not been finished up properly, resulting in the automaton finishing
+    /// up in an unexpected state.
+    InvalidHoldState(State)
 }
 
-// State in which the lexicalisation automaton is currently in. Failure states
-// do not exist, since return of an error is immediate. This means, that multiple
-// errors cannot be detected.
-enum State {
+/// State in which the lexicalisation automaton is currently in. Failure states
+/// do not exist, since return of an error is immediate. This means, that multiple
+/// errors cannot be detected.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum State {
     // Blank state, no information is currently being read.
     Blank,
     // Reading a tuple/a tuple element.
@@ -41,7 +46,13 @@ pub fn lexicalise<S: AsRef<str>>(s: S) -> Result<Vec<Lex>, LexError> {
         };
     }
 
-    Ok(res)
+    // Check if the finishing state is correct
+    if state != State::Blank {
+        Err(LexError::InvalidHoldState(state))
+    }
+    else {
+        Ok(res)
+    }
 }
 
 fn handle_blank(c: char) -> Result<State, LexError> {
@@ -120,5 +131,29 @@ mod test {
             Lex::Tuple(vec![Some("1".into()), Some("false".into())]), Lex::Implication, Lex::Tuple(vec![Some("1".into()), Some("true".into()), Some("Right".into())]),
             Lex::Tuple(vec![Some("1".into()), None]), Lex::Implication, Lex::Tuple(vec![Some("1".into()), None, Some("Hold".into())]),
         ]);
+    }
+
+    #[test]
+    fn lex_unexpected_close_delim() {
+        let lexed = lexicalise(" -> )");
+        assert_eq!(lexed.err().unwrap(), LexError::UnexpectedToken(')'));
+    }
+
+    #[test]
+    fn lex_unclosed_tuple_error() {
+        let lexed = lexicalise("(a, b -> c");
+        assert_eq!(lexed.err().unwrap(), LexError::InvalidHoldState(State::InsideTuple));
+    }
+
+    #[test]
+    fn lex_unfinished_implication_error() {
+        let lexed = lexicalise("(My) (life for) (the) (Horde) -> -> -");
+        assert_eq!(lexed.err().unwrap(), LexError::InvalidHoldState(State::ImplicationStart));
+    }
+
+    #[test]
+    fn lex_implication_destroyed() {
+        let lexed = lexicalise("(Why are we still here?) -< (q, e, d)");
+        assert_eq!(lexed.err().unwrap(), LexError::UnexpectedToken('<'));
     }
 }
