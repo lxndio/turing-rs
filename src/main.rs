@@ -23,7 +23,7 @@ mod test {
     #[test]
     fn simple_turing_machine() {
         let tape = Tape::tape(vec![Some(true), Some(false), Some(true), Some(false), Some(true), Some(false)]);
-        let mut tm = TuringMachine::new(Box::new(tape));
+        let mut tm = TuringMachine::new(tape);
 
         // Transitions for a simple turing machine that just inverts the input
         tm.add_transition((0, Some(true)), (0, Some(false), Direction::Right));

@@ -15,7 +15,7 @@ impl Direction {
             "left" => Some(Direction::Left),
             "hold" => Some(Direction::Hold),
             "right" => Some(Direction::Right),
-            other => None
+            _other => None
         }
     }
 }

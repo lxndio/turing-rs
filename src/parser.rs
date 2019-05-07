@@ -1,7 +1,7 @@
 use crate::turing_machine::{TuringMachine, State};
 use crate::tape::{Tape, Tapeable};
 use crate::lexicaliser::*;
-use crate::head::{Direction, Head};
+use crate::head::Direction;
 
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -159,7 +159,7 @@ mod tests {
         ".to_string();
         let tape = Tape::tape(vec![Some(true), Some(false), Some(true), Some(false), Some(true), Some(false)]);
         let mut tm = parse_simple_turing_machine(&source).expect("Could not parse turing machine");
-        tm.insert_tape(Box::new(tape));
+        tm.insert_tape(tape);
 
         while tm.step() {
             println!("Stepping TM");

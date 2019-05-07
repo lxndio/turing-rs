@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ops::Deref;
 use crate::tape::{Tape, Tapeable};
 use crate::head::{Direction, Head, TuringHead};
 
