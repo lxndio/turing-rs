@@ -7,28 +7,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use std::fmt;
 
-/// Helper function to get the contents that have been written in a string
-/// starting with ( and ending with ). If something other than spaces is around
-/// the brackets, returns None. If no brackets are found, returns None.
-/// Otherwise returns contents of brackets, but without the brackets themselves
-fn between_brackets(s: &str) -> Option<String> {
-    let mut started = false;
-    let mut finished = false;
-    let mut failed = false;
-
-    let r: String = s.trim().chars().filter(|x| {
-        if !started && *x != '(' { failed = true; false }
-        else if *x == '(' { started = true; false }
-        else if finished { failed = true; false }
-        else if *x == ')' { finished = true; false }
-        else { true }
-    }).collect();
-
-    if !finished || !started || failed { None }
-    else { Some(r) }
-}
-
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ParseError {
     /// Lines need to be in the Implication Form, which means, that they are of
     /// the form premise -> effect
@@ -45,7 +24,7 @@ pub enum ParseError {
     /// this will be returned, since the machine must have a valid starting state
     MustHaveStartingState,
     /// When a direction required, but not found.
-    MissingDirection,
+    DirectionIsNone,
     /// When the lexicaliser stumbles upon an unexpected token, the semantics are
     /// not checked, but rather, this syntax error is thrown
     SyntaxError(LexError)
@@ -97,7 +76,12 @@ pub fn parse_simple_turing_machine<S: AsRef<str>, G>(src: S) -> Result<TuringMac
                 Err(_) => return Err(ParseError::InvalidType)
             };
         }
+        // Not the starting state, so we have found a conditional transition from
+        // one state to the other
         else if cause.len() == 2 && effect.len() == 3 {
+            // Helper function to parse the state type from a string. The string
+            // must exist, so it is also an error, if there is a None value for
+            // it.
             let parse_state = |p: Option<String>| {
                 let p = match p {
                     Some(p) => p,
@@ -127,7 +111,7 @@ pub fn parse_simple_turing_machine<S: AsRef<str>, G>(src: S) -> Result<TuringMac
             } else { None };
             let direction = match effect[2].clone() {
                 Some(d) => d,
-                None => return Err(ParseError::MissingDirection)
+                None => return Err(ParseError::DirectionIsNone)
             };
             let direction = match Direction::from_str(direction) {
                 Some(d) => d,
@@ -150,7 +134,7 @@ mod tests {
     use crate::turing_machine::Transitionable;
 
     #[test]
-    fn test_simple_tm_parse() {
+    fn simple_tm_parse() {
         let source = "
         () -> (1)
         (1, true) -> (1, false, Right)
@@ -169,5 +153,26 @@ mod tests {
         tm.print();
 
         assert_eq!(tm.tape().contents_trim_blanks(), vec![Some(false), Some(true), Some(false), Some(true), Some(false), Some(true)]);
+    }
+
+    #[test]
+    fn direction_is_none_error() {
+        let source = "() -> (1) (1, $) -> (2, None, None)";
+        let parse_err = parse_simple_turing_machine::<&str, char>(&source).err().unwrap();
+        assert_eq!(parse_err, ParseError::DirectionIsNone);
+    }
+
+    #[test]
+    fn not_implication_form() {
+        let source = "() -> (1) -> (1, 2, Left)";
+        let parse_err = parse_simple_turing_machine::<&str, char>(&source).err().unwrap();
+        assert_eq!(parse_err, ParseError::NotImplicationForm);
+    }
+
+    #[test]
+    fn must_have_starting_state() {
+        let source = "() -> (None)";
+        let parse_err = parse_simple_turing_machine::<&str, char>(&source).err().unwrap();
+        assert_eq!(parse_err, ParseError::MustHaveStartingState);
     }
 }
